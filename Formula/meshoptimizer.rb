@@ -7,13 +7,25 @@ class Meshoptimizer < Formula
   head "https://github.com/zeux/meshoptimizer.git", branch: "master"
 
   depends_on "cmake" => :build
+  depends_on "basis_universal"
+
+  resource "basis_universal" do
+    url "https://github.com/BinomialLLC/basis_universal/archive/refs/tags/v2_50.tar.gz"
+    sha256 "216e49e1f4213d4bfa4afaa07527e16bac28533dddd444197d3aa19230ac130c"
+  end
 
   def install
     inreplace "CMakeLists.txt", "$ORIGIN", "@loader_path" if OS.mac?
+    inreplace "CMakeLists.txt", "CXX_STANDARD 11", "CXX_STANDARD 17"
 
-    args = %w[
+    resource("basis_universal").stage do
+      (buildpath/"basis_universal").install Dir["*"]
+    end
+
+    args = %W[
       -DMESHOPT_BUILD_GLTFPACK=ON
       -DMESHOPT_BUILD_SHARED_LIBS=ON
+      -DMESHOPT_GLTFPACK_BASISU_PATH=#{buildpath}/basis_universal
     ]
 
     system "cmake", "-S", ".", "-B", "build", *args, *std_cmake_args

@@ -1,4 +1,4 @@
-name: brew test-bot
+name: Tests
 
 on:
   push:
@@ -7,28 +7,45 @@ on:
   pull_request:
 
 jobs:
-  test-bot:
+  test:
     strategy:
       matrix:
-        os: [macos-13, macos-14, macos-15, ubuntu-latest]
+        os: [macos-15, macos-26, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@2026.08.14.1
 
       - name: Cache Homebrew Bundler RubyGems
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.set-up-homebrew.outputs.gems-path }}
           key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
           restore-keys: ${{ runner.os }}-rubygems-
 
-      - run: brew test-bot --only-cleanup-before
+      - name: Register tap
+        run: |
+          BREW_TAPS_DIR="$(brew --repo)/Library/Taps/sharkyrawr"
+          mkdir -p "$BREW_TAPS_DIR"
+          if [ ! -e "$BREW_TAPS_DIR/homebrew-meshoptimizer" ]; then
+            ln -sf "$GITHUB_WORKSPACE" "$BREW_TAPS_DIR/homebrew-meshoptimizer"
+          fi
 
-      - run: brew test-bot --only-setup
+      - name: Setup tap trust
+        run: |
+          brew trust --tap sharkyrawr/meshoptimizer
+          brew trust --formula sharkyrawr/meshoptimizer/meshoptimizer
 
-      - run: brew test-bot --only-tap-syntax
+      - name: Check formula style and audit
+        run: |
+          brew style sharkyrawr/meshoptimizer
+          brew audit --strict --online sharkyrawr/meshoptimizer/meshoptimizer
 
-      - run: brew test-bot --only-formulae
-        if: github.event_name == 'pull_request'
+      - name: Build and test formula
+        run: |
+          brew install --build-from-source sharkyrawr/meshoptimizer/meshoptimizer
+          brew test sharkyrawr/meshoptimizer/meshoptimizer
