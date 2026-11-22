@@ -1,8 +1,8 @@
 class Meshoptimizer < Formula
   desc "Mesh optimization library that makes meshes smaller and faster to render"
   homepage "https://meshoptimizer.org/"
-  url "https://github.com/zeux/meshoptimizer/archive/refs/tags/v1.2.tar.gz"
-  sha256 "e40f71b809cdf3361b9a4def85fd44534e8733ce29d4b943c145b76859e4c2b4"
+  url "https://github.com/zeux/meshoptimizer/archive/refs/tags/v1.3.tar.gz"
+  sha256 "ca4f47d451201593904b9e3067fa54b65db94bc34ab5173864950862b748a145"
   license "MIT"
   head "https://github.com/zeux/meshoptimizer.git", branch: "master"
 
